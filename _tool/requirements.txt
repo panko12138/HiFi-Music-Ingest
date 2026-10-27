@@ -1,0 +1,8 @@
+flask>=2.0
+requests>=2.25
+mutagen>=1.45
+pillow>=9.0
+musicdl>=2.14
+
+# 安装（优先使用镜像）：
+#   pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple

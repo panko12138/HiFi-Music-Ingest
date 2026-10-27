@@ -1,0 +1,21 @@
+# 只跟踪工具代码与文档；曲库音频、歌手目录、运行产物一律不入库
+/*
+!/.gitignore
+!/README.md
+!/一键启动.bat
+!/需求规格说明文档.md
+!/_tool/
+
+# Python 编译缓存
+__pycache__/
+*.py[cod]
+
+# 运行产物与缓存（若被上层规则放行也再次忽略）
+/_work/
+*.flac
+*.wav
+*.mp3
+*.ape
+*.dsf
+*.dff
+*.m4a

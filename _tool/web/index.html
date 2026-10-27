@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>无损音乐检索与自动入库</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="dot"></span>
+    <h1>无损音乐检索与自动入库</h1>
+  </div>
+  <div class="top-actions">
+    <span id="engineState" class="tag">检索引擎：检测中…</span>
+    <button id="verifyBtn" class="btn ghost">全库校验</button>
+  </div>
+</header>
+
+<main>
+  <section class="panel">
+    <h2>检索</h2>
+    <div class="row">
+      <input id="query" type="text" placeholder="歌手 - 歌名，例如：周杰伦 - 青花瓷" autocomplete="off">
+      <button id="searchBtn" class="btn">搜索</button>
+    </div>
+    <p class="hint" id="searchHint"></p>
+  </section>
+
+  <section class="panel">
+    <h2>候选结果 <span class="muted" id="candCount"></span></h2>
+    <div class="table-wrap">
+      <table id="candTable">
+        <thead><tr>
+          <th>来源</th><th>歌手</th><th>歌名</th><th>专辑</th>
+          <th>格式</th><th>大小</th><th>码率</th><th>质量</th><th>说明</th><th></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="row subtle">
+      <input id="manualUrl" type="text" placeholder="兜底：粘贴音频直链（http/https）">
+      <button id="manualUrlBtn" class="btn ghost">添加直链</button>
+    </div>
+    <div class="row subtle">
+      <input id="localPath" type="text" placeholder="兜底：本地文件完整路径（.flac/.wav）">
+      <button id="localBtn" class="btn ghost">本地入库</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>下载队列 <span class="muted" id="queueCount"></span></h2>
+    <div class="table-wrap scroll-y">
+      <table id="queueTable">
+        <thead><tr>
+          <th>状态</th><th>歌曲</th><th>进度</th><th>速度</th><th>说明</th><th></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>批量入库</h2>
+    <div class="row">
+      <input id="batchFile" type="file" accept=".txt,.csv">
+      <button id="batchTextBtn" class="btn ghost">提交下方列表</button>
+    </div>
+    <textarea id="batchText" rows="4" placeholder="每行「歌手 - 歌名」，例如：&#10;陈奕迅 - 富士山下&#10;周杰伦 - 七里香"></textarea>
+    <p class="hint">批量将自动挑选每条的最高质量无损候选入队；单条失败不影响其余条目。</p>
+  </section>
+
+  <section class="panel">
+    <h2>入库日志 <span class="muted" id="logCount"></span></h2>
+    <div class="table-wrap scroll-y">
+      <table id="logTable">
+        <thead><tr><th>时间</th><th>歌曲</th><th>状态</th><th>原因</th><th>路径</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <pre id="verifyOut" class="verify-out" hidden></pre>
+</main>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

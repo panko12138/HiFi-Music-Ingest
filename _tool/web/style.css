@@ -1,0 +1,133 @@
+:root {
+  --bg: #0f1115;
+  --panel: #171a21;
+  --panel-2: #1e222b;
+  --border: #262b36;
+  --text: #e6e8ec;
+  --muted: #8b93a1;
+  --accent: #4f9cf9;
+  --ok: #3ecf8e;
+  --warn: #e0b64a;
+  --err: #ef6b6b;
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.6 "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: rgba(15, 17, 21, 0.92);
+  backdrop-filter: blur(6px);
+  z-index: 5;
+}
+
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand h1 { font-size: 16px; margin: 0; font-weight: 600; letter-spacing: .3px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+
+.top-actions { display: flex; align-items: center; gap: 12px; }
+
+main { padding: 20px 24px 60px; max-width: 1180px; margin: 0 auto; display: grid; gap: 16px; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+}
+
+.panel h2 { font-size: 14px; font-weight: 600; margin: 0 0 12px; color: var(--text); }
+
+.row { display: flex; gap: 10px; align-items: center; }
+.row.subtle { margin-top: 10px; }
+
+input[type="text"], textarea {
+  flex: 1;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font: inherit;
+  outline: none;
+}
+input[type="text"]:focus, textarea:focus { border-color: var(--accent); }
+textarea { width: 100%; margin-top: 10px; resize: vertical; }
+input[type="file"] { color: var(--muted); flex: 1; }
+
+.btn {
+  background: var(--accent);
+  color: #07121f;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+.btn:hover { filter: brightness(1.08); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn.tiny { padding: 4px 10px; font-size: 12px; font-weight: 500; }
+
+.tag {
+  font-size: 12px;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+.tag.ok { color: var(--ok); border-color: rgba(62, 207, 142, .4); }
+.tag.bad { color: var(--err); border-color: rgba(239, 107, 107, .4); }
+
+.muted { color: var(--muted); font-weight: 400; font-size: 12px; }
+.hint { color: var(--muted); font-size: 12px; margin: 10px 0 0; min-height: 18px; }
+
+.table-wrap { overflow-x: auto; }
+/* 队列表：超过约 10 行时内部纵向滚动，表头吸顶 */
+.table-wrap.scroll-y { max-height: 420px; overflow-y: auto; }
+.table-wrap.scroll-y thead th { position: sticky; top: 0; background: var(--panel); z-index: 1; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+th { color: var(--muted); font-weight: 500; font-size: 12px; }
+tbody tr:hover { background: var(--panel-2); }
+td.wrap { white-space: normal; max-width: 340px; }
+
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; border: 1px solid var(--border); }
+.pill.ok { color: var(--ok); border-color: rgba(62,207,142,.35); }
+.pill.err { color: var(--err); border-color: rgba(239,107,107,.35); }
+.pill.warn { color: var(--warn); border-color: rgba(224,182,74,.35); }
+.pill.muted { color: var(--muted); }
+.pill.lossless { color: var(--ok); border-color: rgba(62,207,142,.35); }
+.pill.lossy { color: var(--muted); }
+
+.bar { position: relative; height: 6px; width: 120px; background: var(--panel-2); border-radius: 999px; overflow: hidden; }
+.bar > i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); width: 0; }
+.bar.done > i { background: var(--ok); }
+.bar.failed > i { background: var(--err); }
+
+.verify-out {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: pre-wrap;
+  max-height: 320px;
+  overflow: auto;
+}
+.empty { color: var(--muted); font-size: 13px; padding: 6px 2px; }
