@@ -25,7 +25,7 @@ if errorlevel 1 (
 )
 
 rem ---- 检查依赖，缺失则从清华镜像安装 ----
-python -c "import flask, requests, mutagen, PIL, musicdl" >nul 2>nul
+python -c "import flask, requests, mutagen, musicdl" >nul 2>nul
 if errorlevel 1 (
   echo [提示] 依赖缺失，正在从清华镜像安装，请稍候...
   python -m pip install -r _tool\requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple

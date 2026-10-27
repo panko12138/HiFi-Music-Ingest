@@ -128,7 +128,8 @@ def write_wav(path, meta):
         low = cid.lower()
         if low in (b"list", b"id3 "):
             continue    # 由本次重建
-        kept.append(raw)
+        size = struct.unpack("<I", raw[4:8])[0]
+        kept.append(raw if not size & 1 else raw + b"\x00")  # 补回 RIFF 对齐字节
 
     cover = _read_cover_bytes(meta)
     chunks = b"".join(kept)

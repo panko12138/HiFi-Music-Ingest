@@ -9,12 +9,10 @@ LIBRARY_ROOT = os.path.dirname(TOOL_DIR)
 WORK_DIR = os.path.join(LIBRARY_ROOT, "_work")
 DOWNLOAD_DIR = os.path.join(WORK_DIR, "downloads")
 CACHE_DIR = os.path.join(WORK_DIR, "cache")
-QQLRC_CACHE_DIR = os.path.join(CACHE_DIR, "qqlrc")
 COVER_CACHE_DIR = os.path.join(CACHE_DIR, "cover")
 QUEUE_FILE = os.path.join(WORK_DIR, "queue.json")
 LOG_FILE = os.path.join(WORK_DIR, "入库日志.jsonl")
 LIST_FILE = os.path.join(WORK_DIR, "_整理清单.csv")
-COVER_MAP_FILE = os.path.join(WORK_DIR, "cover_map.json")
 
 WEB_DIR = os.path.join(TOOL_DIR, "web")
 
@@ -28,9 +26,6 @@ TIMEOUT = 30               # 单次请求超时（秒）
 RETRY = 3                  # S-01：失败重试次数
 CHUNK_SIZE = 256 * 1024
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-
-# 功能开关
-SPECTRUM_CHECK = False     # S-04：频谱校验（P2，默认关闭）
 
 # QQ 音乐
 QQ_SEARCH_URL = "https://c.y.qq.com/soso/fcgi-bin/client_search_cp"
@@ -88,5 +83,3 @@ MAX_CANDIDATES = 60
 # 批量模式：候选与输入的相似度阈值（低于则判为「失败」，避免模糊结果误入库）
 BATCH_TITLE_SIM = 0.6
 BATCH_ARTIST_SIM = 0.5
-
-GENRES = ("民谣", "华语流行", "粤语流行", "摇滚")
