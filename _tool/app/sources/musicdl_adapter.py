@@ -155,6 +155,51 @@ def _install_parallel_parsers(client):
         _parse_patched = True
 
 
+def _kuwo_search_result(candidate, song_info):
+    """构造酷我解析所需的 search_result：优先复用检索时的原始结果，缓存丢失时用候选字段拼装。"""
+    raw = ((getattr(song_info, "raw_data", None) or {}).get("search") or {}) if song_info else {}
+    if raw.get("MUSICRID") or raw.get("musicrid"):
+        return raw
+    uid = str(candidate.get("uid") or "")
+    if not uid:
+        return None
+    return {"MUSICRID": "MUSIC_" + uid,
+            "SONGNAME": candidate.get("title") or "",
+            "ARTIST": candidate.get("artist") or "",
+            "ALBUM": candidate.get("album") or "",
+            "DURATION": 0}
+
+
+def _resolve_kuwo(candidate, song_info):
+    """用官方 mobi 接口在下载前重新换取酷我直链。
+
+    第三方解析链给出的 car-er.kuwo.cn 直链对普通 requests 的 GET 返回 403，
+    且带时效；官方接口返回的 kw-er / kw-lv / kw-bj 域名可正常下载。
+    """
+    try:
+        client = _get_client()
+        kuwo = client.music_clients.get("KuwoMusicClient")
+        if kuwo is None:
+            return None
+        search_result = _kuwo_search_result(candidate, song_info)
+        if search_result is None:
+            return None
+        info = kuwo._parsewithofficialapiv1(search_result, None, False)
+        url = info.download_url if isinstance(info.download_url, str) else ""
+        ext = (info.ext or "").lstrip(".").lower()
+        if not url or not info.with_valid_download_url or ext not in ("flac", "wav"):
+            return None
+        return {
+            "url": url,
+            "headers": {"User-Agent": "okhttp/3.10.0"},
+            "cookies": {},
+            "protocol": (info.protocol or "HTTP").upper(),
+            "ext": ext,
+        }
+    except Exception:      # noqa: BLE001
+        return None
+
+
 def _get_client():
     """构造（或复用）musicdl 客户端。"""
     global _client
@@ -279,6 +324,11 @@ class MusicdlAdapter(SourceAdapter):
 
     def resolve(self, candidate):
         song_info = _cache.get("%s::%s" % (candidate.get("sid"), candidate.get("uid")))
+        # 酷我：每次下载前重新换官方直链（第三方 car-er 直链会 403 且会过期）
+        if candidate.get("sid") == "KuwoMusicClient":
+            fresh = _resolve_kuwo(candidate, song_info)
+            if fresh:
+                return fresh
         if song_info is None:
             return None
         url = song_info.download_url if isinstance(song_info.download_url, str) else ""
