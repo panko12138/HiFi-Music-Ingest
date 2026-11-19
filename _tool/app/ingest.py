@@ -7,9 +7,14 @@
 import csv
 import os
 import shutil
+import threading
 
 from . import config, tags
 from .model import Result
+
+# 下载队列并发执行 ingest，去重判断 → 拷贝 → 写标签 → 追加清单必须整体互斥，
+# 否则同一首歌被重复入队时会并发通过去重并重复写清单。
+_INGEST_LOCK = threading.Lock()
 
 # 非法字符 → 全角（与既有曲库约定一致，如 `？` 全角）
 _ILLEGAL_MAP = {"\\": "＼", "/": "／", ":": "：", "*": "＊",
@@ -89,37 +94,46 @@ def ingest(local_path, candidate, meta=None):
     target = os.path.join(album_dir, "%s - %s%s" % (artist, title, ext))
     rel = os.path.relpath(target, config.LIBRARY_ROOT).replace("\\", "/")
 
-    if _find_dup(artist, title) is not None or os.path.isfile(target):
-        return Result(song=song, status="重复", reason="库中已存在，已跳过", path=rel)
+    with _INGEST_LOCK:
+        if _find_dup(artist, title) is not None or os.path.isfile(target):
+            return Result(song=song, status="重复", reason="库中已存在，已跳过", path=rel)
 
-    os.makedirs(album_dir, exist_ok=True)
-    if os.path.abspath(local_path) != os.path.abspath(target):
-        shutil.copy2(local_path, target)
+        copied = os.path.abspath(local_path) != os.path.abspath(target)
+        try:
+            os.makedirs(album_dir, exist_ok=True)
+            if copied:
+                shutil.copy2(local_path, target)
 
-    cover_bytes = _read_cover_bytes(meta)
-    track = int(meta.get("tracknumber") or 0)
-    total = int(meta.get("tracktotal") or 0)
-    tag_meta = {
-        "title": title, "artist": artist, "album": album,
-        "albumartist": meta.get("albumartist") or artist,
-        "tracknumber": track, "tracktotal": total,
-        "year": meta.get("year") or "", "genre": meta.get("genre") or "",
-        "cover_bytes": cover_bytes,
-    }
-    try:
-        tags.write(target, tag_meta)
-    except Exception as e:      # noqa: BLE001
-        return Result(song=song, status="失败", reason="写标签失败：%s" % e, path=rel)
+            cover_bytes = _read_cover_bytes(meta)
+            track = int(meta.get("tracknumber") or 0)
+            total = int(meta.get("tracktotal") or 0)
+            tag_meta = {
+                "title": title, "artist": artist, "album": album,
+                "albumartist": meta.get("albumartist") or artist,
+                "tracknumber": track, "tracktotal": total,
+                "year": meta.get("year") or "", "genre": meta.get("genre") or "",
+                "cover_bytes": cover_bytes,
+            }
+            tags.write(target, tag_meta)
 
-    _write_cover_files(album_dir, cover_bytes)
-    _append_list({
-        "原文件名": "%s - %s.%s" % (candidate.get("artist") or artist,
-                                    candidate.get("title") or title,
-                                    ext.lstrip(".")),
-        "歌手": artist, "专辑": album, "歌名": title,
-        "曲序": ("%02d/%02d" % (track, total)) if (track and total) else
-                ("%02d" % track if track else ""),
-        "年份": meta.get("year") or "", "流派": meta.get("genre") or "",
-        "新路径": rel, "新大小": os.path.getsize(target),
-    })
+            _write_cover_files(album_dir, cover_bytes)
+            _append_list({
+                "原文件名": "%s - %s.%s" % (candidate.get("artist") or artist,
+                                            candidate.get("title") or title,
+                                            ext.lstrip(".")),
+                "歌手": artist, "专辑": album, "歌名": title,
+                "曲序": ("%02d/%02d" % (track, total)) if (track and total) else
+                        ("%02d" % track if track else ""),
+                "年份": meta.get("year") or "", "流派": meta.get("genre") or "",
+                "新路径": rel, "新大小": os.path.getsize(target),
+            })
+        except Exception as e:      # noqa: BLE001
+            # 回滚本次复制进曲库的文件，避免留下无清单记录的孤立文件
+            if copied and os.path.isfile(target):
+                try:
+                    os.remove(target)
+                except OSError:
+                    pass
+            return Result(song=song, status="失败", reason="入库失败：%s" % e, path=rel)
+
     return Result(song=song, status="成功", reason="", path=rel)

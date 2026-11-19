@@ -251,7 +251,9 @@ class MusicdlAdapter(SourceAdapter):
         self.last_note = ""
 
     def handles(self, sid):
-        return sid in config.MUSICDL_SOURCES or sid in config.SOURCE_LABELS
+        # 手动/本地来源由 ManualAdapter 负责，避免责任重叠时被本适配器抢先接管
+        return sid in config.MUSICDL_SOURCES or (
+            sid in config.SOURCE_LABELS and sid not in ("ManualSource", "LocalFile"))
 
     def available(self):
         try:
@@ -281,8 +283,12 @@ class MusicdlAdapter(SourceAdapter):
                     sid, items, _dt = fut.result()
                     results[sid] = items
             except FuturesTimeout:
-                done = {s for s, _items, _dt in (f.result() for f in futures if f.done())}
-                timed_out = [s for s in srcs if s not in done]
+                # 超时瞬间已完成但尚未被 as_completed 取走的源，其候选仍需纳入结果
+                for fut in futures:
+                    if fut.done():
+                        sid, items, _dt = fut.result()
+                        results.setdefault(sid, items)
+                timed_out = [s for s in srcs if s not in results]
         finally:
             pool.shutdown(wait=False)   # 未完成的源后台自然结束，不再等待
 

@@ -144,6 +144,7 @@ def main():
     ok, msg = sources.MusicdlAdapter().available()
     print("检索引擎：%s" % (msg if ok else "不可用（%s）" % msg))
     print("监听：http://%s:%d" % (config.HOST, config.PORT))
+    manager.resume_pending()      # 继续上次中断时遗留的等待任务
     app.run(host=config.HOST, port=config.PORT, debug=False, threaded=True)
 
 

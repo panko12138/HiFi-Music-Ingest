@@ -86,3 +86,33 @@ def test_ingest_writes_album_cover_files(tmp_path, make_wav, library_dir):
     album_dir = library_dir / "周杰伦" / "叶惠美"
     assert (album_dir / "cover.jpg").read_bytes() == cover.read_bytes()
     assert (album_dir / "folder.jpg").read_bytes() == cover.read_bytes()
+
+
+def test_ingest_rolls_back_copied_file_when_tag_write_fails(tmp_path, make_wav, library_dir, monkeypatch):
+    def boom(path, meta_):
+        raise RuntimeError("坏标签")
+
+    monkeypatch.setattr(ingest.tags, "write", boom)
+
+    result = _ingest(tmp_path, make_wav)
+
+    assert result.status == "失败"
+    target = library_dir / "周杰伦" / "叶惠美" / "周杰伦 - 晴天.wav"
+    assert not target.exists()
+
+
+def test_concurrent_ingest_same_song_records_once(tmp_path, make_wav, library_dir):
+    from concurrent.futures import ThreadPoolExecutor
+
+    a = tmp_path / "a.wav"
+    b = tmp_path / "b.wav"
+    a.write_bytes(make_wav(b"\x11" * 16))
+    b.write_bytes(make_wav(b"\x22" * 16))
+    candidate = {"artist": "周杰伦", "title": "晴天"}
+    meta = {"title": "晴天", "artist": "周杰伦", "album": "叶惠美"}
+
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        results = list(ex.map(lambda p: ingest.ingest(str(p), candidate, meta), [a, b]))
+
+    assert sorted(r.status for r in results) == ["成功", "重复"]
+    assert len(_rows()) == 1

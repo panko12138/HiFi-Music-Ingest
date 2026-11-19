@@ -45,6 +45,14 @@ class QueueManager:
             self.tasks[t.id] = t
             self.order.append(t.id)
 
+    def resume_pending(self):
+        """启动时重新提交等待中的任务（上次进程中断遗留），避免任务永远停在「等待」。"""
+        with self.lock:
+            ids = [i for i in self.order
+                   if i in self.tasks and self.tasks[i].status == "pending"]
+        for task_id in ids:
+            self.executor.submit(self._run, task_id)
+
     def save(self):
         with self.lock:
             data = {"tasks": [self.tasks[i].to_dict() for i in self.order if i in self.tasks]}

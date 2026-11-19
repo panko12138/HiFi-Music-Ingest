@@ -50,6 +50,8 @@ def split_track(s):
 
 
 def load_rows():
+    if not os.path.isfile(config.LIST_FILE):
+        return []           # 尚未入库任何歌曲：清单为空即正常状态
     with open(config.LIST_FILE, "r", encoding="utf-8-sig", newline="") as f:
         return list(csv.DictReader(f))
 
